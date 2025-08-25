@@ -4,14 +4,14 @@ import TccCard from "@/app/components/TccCard";// 1. Importando nosso componente
 import { supabase } from "@/lib/supabaseclient";
 
 // 2. Definindo um tipo para os dados do TCC, com base no seu CSV
-type Tcc = {
+/*type Tcc = {
   id: number;
   created_at: string;
   author: string;
   title: string;
   file_url: string;
   course: string;
-};
+};*/
 
 
 // 3. Transformando o componente em uma função assíncrona
