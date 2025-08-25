@@ -88,9 +88,14 @@ export default function EnviarTccPage() {
       (document.getElementById('file-input') as HTMLInputElement).value = '';
 
 
-    } catch (err: any) {
+    } catch (err) { // <<< MUDANÇA AQUI: Removemos o ': any'
       console.error('Erro no envio:', err);
-      setError('Falha ao enviar o TCC. Detalhes: ' + err.message);
+      // Verificamos se 'err' é um objeto de Erro antes de usar 'err.message'
+      if (err instanceof Error) {
+        setError('Falha ao enviar o TCC. Detalhes: ' + err.message);
+      } else {
+        setError('Falha ao enviar o TCC. Ocorreu um erro desconhecido.');
+      }
     } finally {
       setIsSubmitting(false);
     }
