@@ -43,7 +43,7 @@ const TccCard = ({ titulo, autor, ano,fileUrl }: TccCardProps) => {
        <a 
           href={fileUrl} 
           download
-          target =" _blank"
+          target ="_blank"
           rel="noopener noreferrer"
           className="flex-1 text-center bg-[#00c7a9] hover:bg-[#00a88e] text-white font-semibold py-2 rounded-md transition-colors duration-200"
         >

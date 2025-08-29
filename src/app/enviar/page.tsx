@@ -1,10 +1,13 @@
 // src/app/enviar/page.tsx
 //http://localhost:3000/enviar
+
 'use client'; // Marcando como Componente de Cliente para interatividade
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseclient'; // Nosso cliente Supabase
 import Link from 'next/link';
+import { submitTccAction } from './actions'; //Importando a nossa nova action
+import Header from '../components/Header';
 
 export default function EnviarTccPage() {
   // 1. Estados para cada campo do formulário
@@ -19,7 +22,7 @@ export default function EnviarTccPage() {
 
   // 2. Estados para feedback ao usuário
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
+ // const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   // 3. Função para lidar com a seleção do arquivo
@@ -46,11 +49,11 @@ export default function EnviarTccPage() {
     }
 
     setIsSubmitting(true);
-    setMessage('');
+    //setMessage('');
     setError('');
 
     try {
-      // ETAPA A: Fazer o upload do arquivo para o Supabase Storage
+      // ETAPA A: Fazer o upload do arquivo para o Supabase Storage(continua no cliente)
       const filePath = `${Date.now()}-${file.name}`; // Nome único para o arquivo
       const { error: uploadError } = await supabase.storage
         .from('arquivos-tccs') // Nome do seu bucket
@@ -66,7 +69,7 @@ export default function EnviarTccPage() {
       const fileUrl = urlData.publicUrl;
 
       // ETAPA C: Inserir os dados (incluindo a URL do arquivo) na tabela 'tccs'
-      const { error: insertError } = await supabase
+      /*const { error: insertError } = await supabase
         .from('tccs')
         .insert([{ 
             title, 
@@ -74,18 +77,32 @@ export default function EnviarTccPage() {
             course, 
             file_name: file.name, 
             file_url: fileUrl 
-        }]);
+        }]);*/
+        // ETAPA C: Chamar a Server Action para inserir os dados e revalidar
+         const result = await submitTccAction({
+                title,
+                author,
+                course,
+                fileName: file.name,
+                fileUrl,
+              });
 
-      if (insertError) throw insertError;
+          // Se a action retornar um erro, nós o exibimos
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+
+     // if (insertError) throw insertError;
       
-      setMessage('TCC enviado com sucesso!');
+      //setMessage('TCC enviado com sucesso!');
       // Limpar o formulário
-      setTitle('');
+      /*setTitle('');
       setAuthor('');
       setCourse('');
       setFile(null);
       setPassword('');
-      (document.getElementById('file-input') as HTMLInputElement).value = '';
+      (document.getElementById('file-input') as HTMLInputElement).value = '';*/
+
 
 
     } catch (err) { // <<< MUDANÇA AQUI: Removemos o ': any'
@@ -96,107 +113,55 @@ export default function EnviarTccPage() {
       } else {
         setError('Falha ao enviar o TCC. Ocorreu um erro desconhecido.');
       }
-    } finally {
-      setIsSubmitting(false);
-    }
+
+      setIsSubmitting(false);// Importante: para o loading em caso de erro
+    } 
+      
+    // Se tudo der certo, a action irá redirecionar, então não precisamos mais
+    // limpar o formulário ou parar o loading aqui.
+    
   };
 
 
   return (
     <main className="bg-[#18191A] min-h-screen p-8 md:p-12 flex justify-center items-center">
       <div className="w-full max-w-2xl bg-[#242526] p-8 rounded-lg shadow-lg">
+        {/* O resto do seu formulário JSX continua exatamente o mesmo... */}
         <h1 className="text-3xl font-bold text-gray-100 mb-6 text-center">
           Enviar Novo TCC
         </h1>
-
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Campo Título */}
+          {/* Título */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
-              Título do TCC
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">Título do TCC</label>
+            <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
-
-          {/* Campo Autor */}
+          {/* Autor */}
           <div>
-            <label htmlFor="author" className="block text-sm font-medium text-gray-300 mb-1">
-              Autor(es)
-            </label>
-            <input
-              type="text"
-              id="author"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              required
-              className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <label htmlFor="author" className="block text-sm font-medium text-gray-300 mb-1">Autor(es)</label>
+            <input id="author" type="text" value={author} onChange={(e) => setAuthor(e.target.value)} required className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
-
-          {/* Campo Curso */}
+          {/* Curso */}
           <div>
-            <label htmlFor="course" className="block text-sm font-medium text-gray-300 mb-1">
-              Curso
-            </label>
-            <input
-              type="text"
-              id="course"
-              value={course}
-              onChange={(e) => setCourse(e.target.value)}
-              required
-              className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <label htmlFor="course" className="block text-sm font-medium text-gray-300 mb-1">Curso</label>
+            <input id="course" type="text" value={course} onChange={(e) => setCourse(e.target.value)} required className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
-
-          {/* Campo Arquivo */}
+          {/* Arquivo */}
           <div>
-            <label htmlFor="file-input" className="block text-sm font-medium text-gray-300 mb-1">
-              Arquivo do TCC (PDF, DOCX)
-            </label>
-            <input
-              type="file"
-              id="file-input"
-              onChange={handleFileChange}
-              required
-              className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#00c7a9] file:text-white hover:file:bg-[#00a88e]"
-            />
+            <label htmlFor="file-input" className="block text-sm font-medium text-gray-300 mb-1">Arquivo do TCC (PDF, DOCX)</label>
+            <input id="file-input" type="file" onChange={handleFileChange} required className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#00c7a9] file:text-white hover:file:bg-[#00a88e]" />
           </div>
-            {/* Campo Senha */}
+          {/* Senha */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-              Senha para Upload
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">Senha para Upload</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full bg-[#3A3B3C] border border-gray-600 text-white rounded-md p-2 focus:ring-blue-500 focus:border-blue-500" />
           </div>
-
-          {/* Botão de Envio */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-not-allowed"
-          >
+          {/* Botão */}
+          <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition-colors duration-200 disabled:bg-gray-500 disabled:cursor-not-allowed">
             {isSubmitting ? 'Enviando...' : 'Enviar TCC'}
           </button>
         </form>
-
-        {/* Mensagens de Feedback */}
-        {message && <p className="mt-4 text-center text-green-400">{message}</p>}
         {error && <p className="mt-4 text-center text-red-400">{error}</p>}
-
         <div className="text-center mt-6">
             <Link href="/" className="text-sm text-blue-400 hover:underline">
                 ← Voltar para o Acervo

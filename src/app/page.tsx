@@ -1,6 +1,7 @@
 // src/app/page.tsx
 
 import TccCard from "@/app/components/TccCard";// 1. Importando nosso componente
+import Header from "./components/Header";
 import { supabase } from "@/lib/supabaseclient";
 
 // 2. Definindo um tipo para os dados do TCC, com base no seu CSV
@@ -30,12 +31,7 @@ export default async function Home() {
 
   return (
     <main className="bg-[#18191A] min-h-screen p-8 md:p-12">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-12 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-100">Acervo de TCCs</h1>
-          <h2 className="text-3xl font-bold text-gray-100 mb-8">Instituto Central de Educação Isaías Alves - ICEIA</h2>
-        </header>
-        
+      <div className="max-w-7xl mx-auto ">  
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* 6. Mapeando os dados REAIS vindos do Supabase */}
           {tccs?.map((tcc) => (
